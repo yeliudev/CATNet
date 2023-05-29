@@ -16,7 +16,7 @@ Please refer to the following environmental settings that we use. You may instal
 - Python 3.9.7
 - PyTorch 1.10.0
 - [MMCV](https://github.com/open-mmlab/MMCV) 1.3.17
-- [MMDetection](https://github.com/open-mmlab/mmdetection) 2.18.1
+- [MMDetection](https://github.com/open-mmlab/mmdetection) 2.17.0
 - [NNCore](https://github.com/yeliudev/nncore) 0.3.2
 
 ### Install from source
