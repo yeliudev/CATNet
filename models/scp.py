@@ -1,26 +1,18 @@
 # -----------------------------------------------------
 # Context Aggregation Network
 # Licensed under the GNU General Public License v3.0
-# Written by Ye Liu (csyeliu at comp.polyu.edu.hk)
+# Written by Ye Liu (coco.ye.liu at connect.polyu.hk)
 # -----------------------------------------------------
 
 import torch
 import torch.nn as nn
-from mmcv.cnn import ConvModule, caffe2_xavier_init, constant_init
-from mmcv.runner import BaseModule, auto_fp16
-from mmdet.models import NECKS
+from mmcv.cnn import ConvModule, build_plugin_layer
+from mmdet.registry import MODELS
+from mmengine.model import BaseModule, caffe2_xavier_init, constant_init
 
 
+@MODELS.register_module()
 class ContextAggregation(nn.Module):
-    """
-    Context Aggregation Block.
-
-    Args:
-        in_channels (int): Number of input channels.
-        reduction (int, optional): Channel reduction ratio. Default: 1.
-        conv_cfg (dict or None, optional): Config dict for the convolution
-            layer. Default: None.
-    """
 
     def __init__(self, in_channels, reduction=1, conv_cfg=None):
         super(ContextAggregation, self).__init__()
@@ -61,37 +53,22 @@ class ContextAggregation(nn.Module):
         return x + y
 
 
-@NECKS.register_module()
+@MODELS.register_module()
 class SCP(BaseModule):
-    """
-    Spatial Context Pyramid.
-
-    Args:
-        in_channels (int): Number of input channels.
-        num_levels (int): Number of feature pyramid levels.
-        reduction (int, optional): Channel reduction ratio. Default: 1.
-        conv_cfg (dict or None, optional): Config dict for the convolution
-            layer. Default: None.
-        init_cfg (dict or list[dict] or None, optional): Initialization config
-            dict. Default: None.
-    """
 
     def __init__(self,
                  in_channels,
                  num_levels,
-                 reduction=1,
-                 conv_cfg=None,
+                 block_cfg=dict(type='ContextAggregation'),
                  init_cfg=None):
         super(SCP, self).__init__(init_cfg)
         self.in_channels = in_channels
         self.num_levels = num_levels
 
         self.blocks = nn.ModuleList(
-            ContextAggregation(
-                in_channels, reduction=reduction, conv_cfg=conv_cfg)
+            build_plugin_layer(block_cfg, in_channels=in_channels)[1]
             for _ in range(num_levels))
 
-    @auto_fp16()
     def forward(self, inputs):
         out = []
         for i in range(self.num_levels):

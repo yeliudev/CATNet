@@ -1,8 +1,13 @@
-_base_ = 'models'
 # model settings
 norm_cfg = dict(type='SyncBN', requires_grad=True)
 model = dict(
     type='RetinaNet',
+    data_preprocessor=dict(
+        type='DetDataPreprocessor',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        bgr_to_rgb=True,
+        pad_size_divisor=128),
     backbone=dict(
         type='ResNet',
         depth=50,
@@ -13,16 +18,20 @@ model = dict(
         norm_eval=False,
         style='pytorch',
         init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
-    neck=dict(
-        type='FPN',
-        in_channels=[256, 512, 1024, 2048],
-        out_channels=256,
-        num_outs=5,
-        start_level=1,
-        add_extra_convs='on_input'),
+    neck=[
+        dict(
+            type='DenseFPN',
+            in_channels=[256, 512, 1024, 2048],
+            out_channels=256,
+            start_level=1,
+            num_outs=5,
+            stack_times=5,
+            norm_cfg=norm_cfg),
+        dict(type='SCP', in_channels=256, num_levels=5)
+    ],
     bbox_head=dict(
         type='RetinaHead',
-        num_classes=15,
+        num_classes=20,
         in_channels=256,
         stacked_convs=4,
         feat_channels=256,
@@ -50,6 +59,7 @@ model = dict(
             neg_iou_thr=0.4,
             min_pos_iou=0,
             ignore_iof_thr=-1),
+        sampler=dict(type='PseudoSampler'),
         allowed_border=-1,
         pos_weight=-1,
         debug=False),

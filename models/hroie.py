@@ -1,36 +1,26 @@
 # -----------------------------------------------------
 # Context Aggregation Network
 # Licensed under the GNU General Public License v3.0
-# Written by Ye Liu (csyeliu at comp.polyu.edu.hk)
+# Written by Ye Liu (coco.ye.liu at connect.polyu.hk)
 # -----------------------------------------------------
 
 import torch
 import torch.nn as nn
 from mmcv.cnn import ConvModule
-from mmcv.runner import force_fp32
-from mmdet.models import ROI_EXTRACTORS, BaseRoIExtractor
+from mmdet.models import BaseRoIExtractor
+from mmdet.registry import MODELS
 
 
-@ROI_EXTRACTORS.register_module()
-class HRoIE(BaseRoIExtractor):
-    """
-    Hierarchical Region of Interest Extractor.
-
-    Args:
-        direction (str): Feature fusion direction. Options are `top_down` and
-            `bottom_up`.
-        conv_cfg (dict or None, optional): Config dict for the convolution
-            layer. Default: None.
-        init_cfg (dict or list[dict] or None, optional): Initialization config
-            dict. Default: dict(type='Caffe2Xavier', layer='Conv2d').
-    """
+@MODELS.register_module()
+class HierarchicalRoIExtractor(BaseRoIExtractor):
 
     def __init__(self,
                  direction,
                  conv_cfg=None,
                  init_cfg=dict(type='Caffe2Xavier', layer='Conv2d'),
                  **kwargs):
-        super(HRoIE, self).__init__(init_cfg=init_cfg, **kwargs)
+        super(HierarchicalRoIExtractor, self).__init__(
+            init_cfg=init_cfg, **kwargs)
         assert direction in ('top_down', 'bottom_up')
 
         self.direction = direction
@@ -42,8 +32,10 @@ class HRoIE(BaseRoIExtractor):
                 conv_cfg=conv_cfg,
                 act_cfg=None) for _ in range(self.num_inputs))
 
-    @force_fp32(apply_to=('feats', ), out_fp16=True)
     def forward(self, feats, rois, roi_scale_factor=None):
+        # convert fp32 to fp16 when amp is on
+        rois = rois.type_as(feats[0])
+
         assert len(feats) == self.num_inputs
 
         roi_feats = feats[0].new_zeros(

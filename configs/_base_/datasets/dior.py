@@ -1,53 +1,62 @@
-_base_ = 'datasets'
 # dataset settings
 dataset_type = 'DIORDataset'
-data_root = 'data/dior'
-img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+data_root = 'data/dior/'
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='Resize', img_scale=(800, 800), keep_ratio=True),
+    dict(type='Resize', scale=(1200, 800), keep_ratio=True),
     dict(
         type='RandomFlip',
-        flip_ratio=0.75,
+        prob=0.75,
         direction=['horizontal', 'vertical', 'diagonal']),
-    dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size_divisor=64),
-    dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+    dict(type='PackDetInputs')
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
+    dict(type='Resize', scale=(1200, 800), keep_ratio=True),
+    dict(type='LoadAnnotations', with_bbox=True),
     dict(
-        type='MultiScaleFlipAug',
-        img_scale=(800, 800),
-        flip=False,
-        transforms=[
-            dict(type='Resize', keep_ratio=True),
-            dict(type='RandomFlip'),
-            dict(type='Normalize', **img_norm_cfg),
-            dict(type='Pad', size_divisor=64),
-            dict(type='ImageToTensor', keys=['img']),
-            dict(type='Collect', keys=['img'])
-        ])
+        type='PackDetInputs',
+        meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+                   'scale_factor'))
 ]
-data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
-    train=dict(
+train_dataloader = dict(
+    batch_size=2,
+    num_workers=2,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=True),
+    batch_sampler=dict(type='AspectRatioBatchSampler'),
+    dataset=dict(
+        type='ConcatDataset',
+        datasets=[
+            dict(
+                type=dataset_type,
+                data_root=data_root,
+                ann_file='ImageSets/Main/train.txt',
+                data_prefix=dict(sub_data_root='./'),
+                filter_cfg=dict(filter_empty_gt=True, min_size=32),
+                pipeline=train_pipeline),
+            dict(
+                type=dataset_type,
+                data_root=data_root,
+                ann_file='ImageSets/Main/val.txt',
+                data_prefix=dict(sub_data_root='./'),
+                filter_cfg=dict(filter_empty_gt=True, min_size=32),
+                pipeline=train_pipeline)
+        ]))
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
         type=dataset_type,
         data_root=data_root,
-        ann_file='ImageSets/Main/train.txt',
-        pipeline=train_pipeline),
-    val=dict(
-        type=dataset_type,
-        data_root=data_root,
-        ann_file='ImageSets/Main/val.txt',
-        pipeline=test_pipeline),
-    test=dict(
-        type=dataset_type,
-        data_root=data_root,
-        ann_file='ImageSets/Main/val.txt',
+        ann_file='ImageSets/Main/test.txt',
+        data_prefix=dict(sub_data_root='./'),
+        test_mode=True,
         pipeline=test_pipeline))
-evaluation = dict(metric='mAP')
+val_evaluator = dict(type='VOCMetric', metric='mAP', eval_mode='area')
+test_dataloader = val_dataloader
+test_evaluator = val_evaluator

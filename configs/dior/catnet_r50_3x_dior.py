@@ -1,7 +1,6 @@
 _base_ = [
-    '../_base_/models/retinanet_r50_fpn.py', '../_base_/modules/dfpn.py',
-    '../_base_/modules/scp.py', '../_base_/datasets/dior.py',
-    '../_base_/one_stage.py', '../_base_/schedules/schedule_3x.py',
-    '../_base_/default_runtime.py'
+    '../_base_/models/catnet_r50_fpn.py', '../_base_/datasets/dior.py',
+    '../_base_/schedules/schedule_3x.py', '../_base_/default_runtime.py'
 ]
-model = dict(bbox_head=dict(num_classes=20))
+# schedule settings
+optim_wrapper = dict(optimizer=dict(lr=0.005))

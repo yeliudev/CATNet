@@ -1,8 +1,14 @@
-_base_ = 'models'
 # model settings
 norm_cfg = dict(type='SyncBN', requires_grad=True)
 model = dict(
-    type='FasterRCNN',
+    type='MaskRCNN',
+    data_preprocessor=dict(
+        type='DetDataPreprocessor',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        bgr_to_rgb=True,
+        pad_mask=True,
+        pad_size_divisor=64),
     backbone=dict(
         type='ResNet',
         depth=50,
@@ -13,11 +19,16 @@ model = dict(
         norm_eval=False,
         style='pytorch',
         init_cfg=dict(type='Pretrained', checkpoint='torchvision://resnet50')),
-    neck=dict(
-        type='FPN',
-        in_channels=[256, 512, 1024, 2048],
-        out_channels=256,
-        num_outs=5),
+    neck=[
+        dict(
+            type='DenseFPN',
+            in_channels=[256, 512, 1024, 2048],
+            out_channels=256,
+            num_outs=5,
+            stack_times=5,
+            norm_cfg=norm_cfg),
+        dict(type='SCP', in_channels=256, num_levels=5)
+    ],
     rpn_head=dict(
         type='RPNHead',
         in_channels=256,
@@ -37,10 +48,11 @@ model = dict(
     roi_head=dict(
         type='StandardRoIHead',
         bbox_roi_extractor=dict(
-            type='SingleRoIExtractor',
+            type='HierarchicalRoIExtractor',
             roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
             out_channels=256,
-            featmap_strides=[4, 8, 16, 32]),
+            featmap_strides=[4, 8, 16, 32],
+            direction='bottom_up'),
         bbox_head=dict(
             type='Shared2FCBBoxHead',
             in_channels=256,
@@ -54,7 +66,21 @@ model = dict(
             reg_class_agnostic=False,
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-            loss_bbox=dict(type='L1Loss', loss_weight=1.0))),
+            loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+        mask_roi_extractor=dict(
+            type='HierarchicalRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32],
+            direction='top_down'),
+        mask_head=dict(
+            type='FCNMaskHead',
+            num_convs=4,
+            in_channels=256,
+            conv_out_channels=256,
+            num_classes=15,
+            loss_mask=dict(
+                type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))),
     train_cfg=dict(
         rpn=dict(
             assigner=dict(
@@ -92,6 +118,7 @@ model = dict(
                 pos_fraction=0.25,
                 neg_pos_ub=-1,
                 add_gt_as_proposals=True),
+            mask_size=28,
             pos_weight=-1,
             debug=False)),
     test_cfg=dict(
@@ -103,4 +130,5 @@ model = dict(
         rcnn=dict(
             score_thr=0.05,
             nms=dict(type='soft_nms', iou_threshold=0.5),
-            max_per_img=1000)))
+            max_per_img=1000,
+            mask_thr_binary=0.5)))

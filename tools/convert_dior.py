@@ -1,7 +1,7 @@
 # -----------------------------------------------------
 # Context Aggregation Network
 # Licensed under the GNU General Public License v3.0
-# Written by Ye Liu (csyeliu at comp.polyu.edu.hk)
+# Written by Ye Liu (coco.ye.liu at connect.polyu.hk)
 # -----------------------------------------------------
 
 import argparse
@@ -22,12 +22,12 @@ CATEGORY_MAP = {
 }
 
 
-def convert_anno(ann_dir, out_dir):
-    files = nncore.ls(ann_dir, ext='xml')
+def convert_anno(hbb_dir, out_dir):
+    files = nncore.ls(hbb_dir, ext='xml')
 
     prog_bar = nncore.ProgressBar(num_tasks=len(files))
     for filename in files:
-        anno_path = nncore.join(ann_dir, filename)
+        anno_path = nncore.join(hbb_dir, filename)
         anno = nncore.load(anno_path)
 
         for obj in anno.findall('object'):
@@ -51,7 +51,6 @@ def convert_anno(ann_dir, out_dir):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', help='data path', default='data/dior')
-    parser.add_argument('--out', help='output path')
     args = parser.parse_args()
     return args
 
@@ -62,8 +61,8 @@ def main():
     img_dir = nncore.join(args.data_path, 'JPEGImages')
     ann_dir = nncore.join(args.data_path, 'Annotations')
 
-    out_dir = args.out or ann_dir
-    nncore.mkdir(out_dir)
+    hbb_dir = nncore.join(ann_dir, 'Horizontal Bounding Boxes')
+    obb_dir = nncore.join(ann_dir, 'Oriented Bounding Boxes')
 
     print('Combining trainval and test images...')
     nncore.rename(f'{img_dir}-trainval', img_dir)
@@ -72,7 +71,10 @@ def main():
     nncore.remove(f'{img_dir}-test')
 
     print('Converting annotations')
-    convert_anno(ann_dir, out_dir)
+    convert_anno(hbb_dir, ann_dir)
+
+    nncore.remove(hbb_dir)
+    nncore.remove(obb_dir)
 
 
 if __name__ == '__main__':

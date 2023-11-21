@@ -1,43 +1,19 @@
 # -----------------------------------------------------
 # Context Aggregation Network
 # Licensed under the GNU General Public License v3.0
-# Written by Ye Liu (csyeliu at comp.polyu.edu.hk)
+# Written by Ye Liu (coco.ye.liu at connect.polyu.hk)
 # -----------------------------------------------------
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import ConvModule
-from mmcv.runner import BaseModule, auto_fp16
-from mmdet.models import NECKS
+from mmdet.registry import MODELS
+from mmengine.model import BaseModule
 
 
-@NECKS.register_module()
+@MODELS.register_module()
 class DenseFPN(BaseModule):
-    """
-    Dense Feature Pyramid Network.
-
-    Args:
-        in_channels (List[int]): Number of input channels per scale.
-        out_channels (int): Number of output channels.
-        num_outs (int): Number of output scales.
-        start_level (int, optional): Index of the start input backbone level
-            used to build the feature pyramid. Default: 0.
-        end_level (int, optional): Index of the end input backbone level used
-            to build the feature pyramid. Default: -1.
-        stack_times (int, optional): Number of times the basic block will be
-            stacked. Default: 1.
-        reduction (int, optional): Channel reduction ratio in bottlenecks.
-            Default: 2.
-        conv_cfg (dict or None, optional): Config dict for the convolution
-            layer. Default: None.
-        norm_cfg (dict or None, optional): Config dict for the normalization
-            layer. Default: None.
-        act_cfg (dict or None, optional): Config dict for the activation layer.
-            Default: None.
-        init_cfg (dict or list[dict] or None, optional): Initialization config
-            dict. Default: dict(type='Caffe2Xavier', layer='Conv2d').
-    """
 
     def __init__(self,
                  in_channels,
@@ -138,7 +114,6 @@ class DenseFPN(BaseModule):
         self.bottom_up_atts = nn.ParameterList(
             nn.Parameter(torch.ones(i)) for i in range(2, num_outs))
 
-    @auto_fp16()
     def forward(self, inputs):
         # lateral convs
         laterals = [
