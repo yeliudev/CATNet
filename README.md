@@ -3,7 +3,7 @@
 [![arXiv](https://badgen.net/badge/arXiv/2111.11057/red?cache=300)](https://arxiv.org/abs/2111.11057)
 [![License](https://badgen.net/github/license/yeliudev/CATNet?label=License&color=cyan&cache=300)](https://github.com/yeliudev/CATNet/blob/main/LICENSE)
 
-This repository maintains the official implementation of the paper **Learning to Aggregate Multi-Scale Context for Instance Segmentation in Remote Sensing Images** by [Ye Liu](https://yeliu.dev/), [Huifang Li](https://faculty.whu.edu.cn/show.jsp?n=Huifang%20Li), [Chao Hu](https://orcid.org/0000-0001-6183-9051), [Shuang Luo](https://www.researchgate.net/profile/shuang-luo-6), [Yan Luo](https://www.researchgate.net/profile/Yan_Luo65), and [Chang Wen Chen](https://web.comp.polyu.edu.hk/chencw/), which has been accepted by [TNNLS 2023](https://cis.ieee.org/publications/t-neural-networks-and-learning-systems).
+This repository maintains the official implementation of the paper **Learning to Aggregate Multi-Scale Context for Instance Segmentation in Remote Sensing Images** by [Ye Liu](https://yeliu.dev/), [Huifang Li](https://faculty.whu.edu.cn/show.jsp?n=Huifang%20Li), [Chao Hu](https://orcid.org/0000-0001-6183-9051), [Shuang Luo](https://www.researchgate.net/profile/shuang-luo-6), [Yan Luo](https://www.researchgate.net/profile/Yan_Luo65), and [Chang Wen Chen](https://web.comp.polyu.edu.hk/chencw/), which has been accepted by [TNNLS](https://cis.ieee.org/publications/t-neural-networks-and-learning-systems).
 
 <p align="center"><img width="850" src="https://raw.githubusercontent.com/yeliudev/CATNet/main/.github/model.svg"></p>
 
@@ -275,10 +275,10 @@ We provide multiple pre-trained models here. All the models are trained using 4 
 If you find this project useful for your research, please kindly cite our paper.
 
 ```bibtex
-@article{liu2023learning,
+@article{liu2024learning,
   title={Learning to Aggregate Multi-Scale Context for Instance Segmentation in Remote Sensing Images},
   author={Liu, Ye and Li, Huifang and Hu, Chao and Luo, Shuang and Luo, Yan and Chen, Chang Wen},
   journal={IEEE Transactions on Neural Networks and Learning Systems},
-  year={2023}
+  year={2024}
 }
 ```
